@@ -4,7 +4,9 @@ import router from './router'
 import store from './store'
 import './utils/register-vant.js'
 import 'amfe-flexible'
+import '@/utils/validation'
 import '@/styles/index.less'
+import './utils/datetime'
 Vue.config.productionTip = false
 new Vue({
   router,

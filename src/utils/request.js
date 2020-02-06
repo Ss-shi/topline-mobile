@@ -6,6 +6,8 @@ import axios from 'axios'
 
 import jsonBig from 'json-bigint'
 
+import store from '@/store'
+import router from '@/router'
 // axios.create 方法：复制一个 axios
 const request = axios.create({
   baseURL: 'http://ttapi.research.itcast.cn/' // 基础路径
@@ -29,5 +31,61 @@ request.defaults.transformResponse = [function (data) {
     return {}
   }
 }]
+// 请求拦截器
+request.interceptors.request.use(function (config) {
+  const { user } = store.state
+  if (user) { config.headers.Authorization = `Bearer ${user.token}` }
+  return config
+}, function (error) {
+  // Do something with request error
+  return Promise.reject(error)
+})
 
+// 响应拦截器
+request.interceptors.response.use(function (response) {
+  // Any status code that lie within the range of 2xx cause this function to trigger
+  // Do something with response data
+  return response
+}, async function (error) {
+  // Any status codes that falls outside the range of 2xx cause this function to trigger
+  // Do something with response error
+  if (error.response && error.response.status === 401) {
+    const user = store.state.user
+    if (!user || !user.refresh_token) {
+      redirectLogin()
+      // router.push('/login')
+
+      return
+    }
+    try {
+      const { data } = await axios({
+        url: 'http://ttapi.research.itcast.cn/app/v1_0/authorizations',
+        method: 'PUT',
+        Headers: {
+          Authorization: `Bearer ${user.refresh_token}`
+        }
+      })
+      store.commit('onSetItem', {
+        ...user,
+        token: data.data.token
+      })
+      return request(error.config)
+    } catch (err) {
+      console.log('刷新token失败', err)
+      redirectLogin()
+      // router.push('/login')
+    }
+  }
+
+  return Promise.reject(error)
+})
+
+function redirectLogin () {
+  router.push({
+    name: 'login',
+    query: {
+      redirect: router.currentRoute.fullPath
+    }
+  })
+}
 export default request
