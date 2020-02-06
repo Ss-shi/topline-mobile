@@ -72,7 +72,7 @@ export default {
       })
       // 数据放入列表
       const { results } = data.data
-      console.log(data)
+      // console.log(data)
 
       this.list.push(...results)
       // 加载状态结束
