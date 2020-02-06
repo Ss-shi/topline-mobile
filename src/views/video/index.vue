@@ -1,5 +1,8 @@
 <template>
-  <div class="video-container"></div>
+  <div class="video-container">
+    <van-nav-bar title="视频" />
+
+  </div>
 </template>
 
 <script>
